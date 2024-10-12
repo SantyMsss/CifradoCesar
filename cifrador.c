@@ -6,6 +6,9 @@
 Cifrador base desarrollado por Santiago Martinez Serna, Laura Sofia Toro Garcia y Santiago Alejandro Santacruz
 Para la asignatura de Matematicas Discretas 1
 Presentado a Docente: Ing. Andres Fernando Velasco
+
+LA URL DEL REPOSITORIO ES:
+https://github.com/SantyMsss/Cifrador
  */
 
 // transformar letra a número (A=0, B=1, ..., Z=25)
