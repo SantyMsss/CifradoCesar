@@ -2,6 +2,12 @@
 #include <string.h>
 #include <ctype.h>
 
+/*
+Cifrador base desarrollado por Santiago Martinez Serna, Laura Sofia Toro Garcia y Santiago Alejandro Santacruz
+Para la asignatura de Matematicas Discretas 1
+Presentado a Docente: Ing. Andres Fernando Velasco
+ */
+
 // transformar letra a número (A=0, B=1, ..., Z=25)
 int letraANumero(char letra) {
     if (isupper(letra)) {
