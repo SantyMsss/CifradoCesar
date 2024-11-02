@@ -1,84 +1,94 @@
-#include <jni.h>
-#include <stdio.h>
+#include "ejemplojni_lib_JavaCifrador.h"
 #include <string.h>
-#include <ctype.h>
-#include "cifrador.h"
+#include <stdlib.h>
 
-// transformar letra a número (A=0, B=1, ..., Z=25)
-int letraANumero(char letra) {
-    return isupper(letra) ? letra - 'A' : letra - 'a';
-}
+// Método para cifrar usando el cifrado César
+JNIEXPORT jstring JNICALL Java_ejemplojni_lib_JavaCifrador_cifrarCesar
+  (JNIEnv *env, jobject obj, jstring mensaje, jint desplazamiento) {
+    const char *str = (*env)->GetStringUTFChars(env, mensaje, 0);
+    int len = strlen(str);
+    char *result = (char *)malloc(len + 1);
 
-// transformar número a letra (0=A, 1=B, ..., 25=Z)
-char numeroALetra(int numero, int esMayuscula) {
-    return (char)(numero + (esMayuscula ? 'A' : 'a'));
-}
-
-// Función para cifrar el texto usando el cifrado César
-JNIEXPORT jstring JNICALL Java_CifradorJNI_cifrarCesar(JNIEnv *env, jobject thisObj, jstring mensaje, jint desplazamiento) {
-    const char *inputMensaje = (*env)->GetStringUTFChars(env, mensaje, NULL);
-    char cifrado[strlen(inputMensaje) + 1];
-    strcpy(cifrado, inputMensaje);
-
-    for (int i = 0; i < strlen(cifrado); i++) {
-        if (isalpha(cifrado[i])) {
-            int esMayuscula = isupper(cifrado[i]);
-            int nuevoNumero = (letraANumero(cifrado[i]) + desplazamiento) % 26;
-            cifrado[i] = numeroALetra(nuevoNumero, esMayuscula);
-        }
+    for (int i = 0; i < len; i++) {
+        result[i] = str[i] + desplazamiento;
     }
-    (*env)->ReleaseStringUTFChars(env, mensaje, inputMensaje);
-    return (*env)->NewStringUTF(env, cifrado);
+    result[len] = '\0';
+
+    (*env)->ReleaseStringUTFChars(env, mensaje, str);
+    jstring encrypted = (*env)->NewStringUTF(env, result);
+    free(result);
+
+    return encrypted;
 }
 
-// Función para descifrar el texto usando el cifrado César
-JNIEXPORT jstring JNICALL Java_CifradorJNI_descifrarCesar(JNIEnv *env, jobject thisObj, jstring mensaje, jint desplazamiento) {
-    const char *inputMensaje = (*env)->GetStringUTFChars(env, mensaje, NULL);
-    char descifrado[strlen(inputMensaje) + 1];
-    strcpy(descifrado, inputMensaje);
+// Método para descifrar usando el cifrado César
+JNIEXPORT jstring JNICALL Java_ejemplojni_lib_JavaCifrador_descifrarCesar
+  (JNIEnv *env, jobject obj, jstring mensaje, jint desplazamiento) {
+    const char *str = (*env)->GetStringUTFChars(env, mensaje, 0);
+    int len = strlen(str);
+    char *result = (char *)malloc(len + 1);
 
-    for (int i = 0; i < strlen(descifrado); i++) {
-        if (isalpha(descifrado[i])) {
-            int esMayuscula = isupper(descifrado[i]);
-            int nuevoNumero = (letraANumero(descifrado[i]) - desplazamiento + 26) % 26;
-            descifrado[i] = numeroALetra(nuevoNumero, esMayuscula);
-        }
+    for (int i = 0; i < len; i++) {
+        result[i] = str[i] - desplazamiento;
     }
-    (*env)->ReleaseStringUTFChars(env, mensaje, inputMensaje);
-    return (*env)->NewStringUTF(env, descifrado);
+    result[len] = '\0';
+
+    (*env)->ReleaseStringUTFChars(env, mensaje, str);
+    jstring decrypted = (*env)->NewStringUTF(env, result);
+    free(result);
+
+    return decrypted;
 }
 
-// Función para cifrar con la escítala espartana
-JNIEXPORT jstring JNICALL Java_CifradorJNI_cifrarEscitala(JNIEnv *env, jobject thisObj, jstring mensaje, jint numLineas) {
-    const char *inputMensaje = (*env)->GetStringUTFChars(env, mensaje, NULL);
-    int len = strlen(inputMensaje);
-    char cifrado[100] = {0};  // Ajustar tamaño si es necesario
-    int indice = 0;
+// Método para cifrar usando Escítala Espartana
+JNIEXPORT jstring JNICALL Java_ejemplojni_lib_JavaCifrador_cifrarEscitala
+  (JNIEnv *env, jobject obj, jstring mensaje, jint numLineas) {
+    const char *str = (*env)->GetStringUTFChars(env, mensaje, 0);
+    int len = strlen(str);
+    int numColumnas = (len + numLineas - 1) / numLineas;  // Calcula el número de columnas necesario
+    char *result = (char *)malloc(len + 1);
 
-    for (int col = 0; col < numLineas; col++) {
-        for (int fila = col; fila < len; fila += numLineas) {
-            cifrado[indice++] = inputMensaje[fila];
-        }
-    }
-    (*env)->ReleaseStringUTFChars(env, mensaje, inputMensaje);
-    return (*env)->NewStringUTF(env, cifrado);
-}
-
-// Función para descifrar con la escítala espartana
-JNIEXPORT jstring JNICALL Java_CifradorJNI_descifrarEscitala(JNIEnv *env, jobject thisObj, jstring mensaje, jint numLineas) {
-    const char *inputMensaje = (*env)->GetStringUTFChars(env, mensaje, NULL);
-    int len = strlen(inputMensaje);
-    char descifrado[100] = {0};  // Ajustar tamaño si es necesario
-    int indice = 0;
-
-    int numColumnas = (len + numLineas - 1) / numLineas;
-
+    // Rellena la matriz por filas
+    int k = 0;
     for (int col = 0; col < numColumnas; col++) {
-        for (int fila = col; fila < len; fila += numColumnas) {
-            descifrado[indice++] = inputMensaje[fila];
+        for (int row = 0; row < numLineas; row++) {
+            if (col + row * numColumnas < len) {
+                result[k++] = str[col + row * numColumnas];
+            }
         }
     }
-    (*env)->ReleaseStringUTFChars(env, mensaje, inputMensaje);
-    return (*env)->NewStringUTF(env, descifrado);
+    result[len] = '\0';
+
+    (*env)->ReleaseStringUTFChars(env, mensaje, str);
+    jstring encrypted = (*env)->NewStringUTF(env, result);
+    free(result);
+
+    return encrypted;
+}
+
+// Método para descifrar usando Escítala Espartana
+JNIEXPORT jstring JNICALL Java_ejemplojni_lib_JavaCifrador_descifrarEscitala
+  (JNIEnv *env, jobject obj, jstring mensaje, jint numLineas) {
+    const char *str = (*env)->GetStringUTFChars(env, mensaje, 0);
+    int len = strlen(str);
+    int numColumnas = (len + numLineas - 1) / numLineas;  // Calcula el número de columnas necesario
+    char *result = (char *)malloc(len + 1);
+
+    // Rellena la matriz por columnas
+    int k = 0;
+    for (int row = 0; row < numLineas; row++) {
+        for (int col = 0; col < numColumnas; col++) {
+            if (col * numLineas + row < len) {
+                result[col * numLineas + row] = str[k++];
+            }
+        }
+    }
+    result[len] = '\0';
+
+    (*env)->ReleaseStringUTFChars(env, mensaje, str);
+    jstring decrypted = (*env)->NewStringUTF(env, result);
+    free(result);
+
+    return decrypted;
 }
 
